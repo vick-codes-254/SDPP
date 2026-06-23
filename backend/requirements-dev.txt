@@ -1,0 +1,25 @@
+# ════════════════════════════════════════════════════════════════
+#  SDPP — Development, Testing & Security-Tooling Dependencies
+# ════════════════════════════════════════════════════════════════
+-r requirements.txt
+
+# ── Test framework ──────────────────────────────────────────────
+pytest>=8.3.0
+pytest-cov>=6.0.0
+pytest-asyncio>=0.24.0
+pytest-randomly>=3.16.0          # randomised test ordering (flakiness/isolation)
+hypothesis>=6.122.0             # property-based / fuzz testing
+faker>=33.0.0                   # realistic fake PII for fixtures
+httpx>=0.28.0                   # ASGI test client
+aiosqlite>=0.20.0              # async SQLite for fast isolated tests
+
+# ── Performance / load testing ──────────────────────────────────
+locust>=2.32.0                 # distributed load testing
+pytest-benchmark>=5.1.0        # micro-benchmarks for crypto throughput
+
+# ── Static analysis / SAST / supply-chain ───────────────────────
+ruff>=0.8.0                    # linting + formatting
+mypy>=1.13.0                   # static typing
+bandit>=1.8.0                  # Python SAST
+pip-audit>=2.7.0              # dependency CVE auditing
+detect-secrets>=1.5.0         # secret-scanning pre-commit

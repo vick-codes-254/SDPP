@@ -1,0 +1,96 @@
+[project]
+name = "sdpp-backend"
+version = "1.0.0"
+description = "Secure Data Protection Platform — enterprise encryption, integrity, KMS, audit & compliance"
+requires-python = ">=3.13"
+license = { text = "Proprietary" }
+authors = [{ name = "SDPP Engineering" }]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["app*"]
+
+# ════════════════════════════════════════════════════════════════
+#  Pytest
+# ════════════════════════════════════════════════════════════════
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+addopts = [
+    "--strict-markers",
+    "--strict-config",
+    "-ra",
+]
+markers = [
+    "unit: fast, isolated unit tests",
+    "integration: cross-component workflow tests",
+    "security: adversarial / attack-simulation tests",
+    "crypto: cryptographic correctness & invariants",
+    "performance: throughput / latency benchmarks",
+    "slow: long-running tests (large files, key rotation at scale)",
+]
+
+# ════════════════════════════════════════════════════════════════
+#  Coverage
+# ════════════════════════════════════════════════════════════════
+[tool.coverage.run]
+branch = true
+source = ["app"]
+omit = ["app/main.py", "*/__init__.py", "app/db/migrations/*"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 85
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+# ════════════════════════════════════════════════════════════════
+#  Ruff (lint + format)
+# ════════════════════════════════════════════════════════════════
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["app", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "C4", "S", "A", "RUF", "ASYNC"]
+# S = flake8-bandit (security). Keep these ON in app code.
+ignore = ["E501"]  # line length handled by formatter
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106", "S311"]  # asserts & test secrets allowed in tests
+
+# ════════════════════════════════════════════════════════════════
+#  mypy
+# ════════════════════════════════════════════════════════════════
+[tool.mypy]
+python_version = "3.13"
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["argon2.*", "passlib.*"]
+ignore_missing_imports = true
+
+# ════════════════════════════════════════════════════════════════
+#  Bandit (SAST)
+# ════════════════════════════════════════════════════════════════
+[tool.bandit]
+exclude_dirs = ["tests", "venv", ".venv"]
