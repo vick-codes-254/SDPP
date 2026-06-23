@@ -13,13 +13,27 @@ from fastapi.responses import StreamingResponse
 from app.api.deps import client_ip, get_vault_service, require_permission
 from app.core.enums import FileCategory
 from app.schemas.common import Message
-from app.schemas.files import IntegrityCheckResponse, UploadResponse
+from app.schemas.files import FileResponse, IntegrityCheckResponse, UploadResponse
 from app.services.vault_service import VaultService
 
 router = APIRouter(prefix="/files", tags=["file-vault"])
 
 VaultDep = Annotated[VaultService, Depends(get_vault_service)]
 _DL_CHUNK = 1024 * 1024
+
+
+@router.get("", response_model=list[FileResponse])
+async def list_files(
+    vault: VaultDep,
+    principal: Annotated[object, Depends(require_permission("file:read"))],
+) -> list[FileResponse]:
+    files = await vault.list_files()
+    return [
+        FileResponse.model_validate(
+            {**f.__dict__, "original_filename": f.original_filename, "description": f.description}
+        )
+        for f in files
+    ]
 
 
 @router.post("", response_model=UploadResponse, status_code=status.HTTP_201_CREATED)

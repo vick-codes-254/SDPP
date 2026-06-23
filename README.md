@@ -151,6 +151,23 @@ See [`docs/THREAT_MODEL.md`](docs/THREAT_MODEL.md) and
 
 ---
 
+## 📚 Documentation
+
+| Doc | Contents |
+|-----|----------|
+| [ARCHITECTURE](docs/ARCHITECTURE.md) | System & layer diagrams, ERD, data flows, request lifecycle |
+| [SECURITY](docs/SECURITY.md) | Cryptographic design & rationale |
+| [THREAT_MODEL](docs/THREAT_MODEL.md) | STRIDE analysis, OWASP Top 10 coverage, residual risks |
+| [RISK_ASSESSMENT](docs/RISK_ASSESSMENT.md) | Scored risk register & treatment |
+| [COMPLIANCE](docs/COMPLIANCE.md) | OWASP ASVS / NIST / ISO 27001 control mapping |
+| [PENTEST](docs/PENTEST.md) | OWASP Top 10 test procedures & remediation |
+| [DEPLOYMENT](docs/DEPLOYMENT.md) | Deployment guide (Docker / bare-metal / ops) |
+| [PRODUCTION_READINESS](docs/PRODUCTION_READINESS.md) | Go-live security checklist |
+
+API reference is auto-generated (OpenAPI) at `/docs` and `/redoc` (non-production).
+
+---
+
 ## 📜 License
 
 Proprietary — © SDPP. All rights reserved.

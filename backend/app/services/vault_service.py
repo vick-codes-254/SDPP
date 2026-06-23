@@ -164,6 +164,23 @@ class VaultService:
             raise NotFoundError("File not found")
         return file
 
+    async def list_files(
+        self,
+        *,
+        owner_id: uuid.UUID | None = None,
+        include_deleted: bool = False,
+        limit: int = 100,
+    ) -> list[File]:
+        stmt = (
+            select(File).options(selectinload(File.encrypted))
+            .order_by(File.created_at.desc()).limit(limit)
+        )
+        if owner_id is not None:
+            stmt = stmt.where(File.owner_id == owner_id)
+        if not include_deleted:
+            stmt = stmt.where(File.status != FileStatus.deleted)
+        return list((await self.db.execute(stmt)).scalars().all())
+
     async def download(
         self,
         *,

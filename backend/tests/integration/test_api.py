@@ -95,6 +95,18 @@ class TestVaultEndpoints:
         assert iv.status_code == 200
         assert iv.json()["result"] == "passed"
 
+    async def test_list_files(self, client: AsyncClient) -> None:
+        token = await _token(client)
+        await client.post(
+            f"{API}/files", headers=_auth(token),
+            files={"upload": ("a.bin", b"aaa", "application/octet-stream")},
+            data={"category": "document"},
+        )
+        r = await client.get(f"{API}/files", headers=_auth(token))
+        assert r.status_code == 200
+        assert len(r.json()) >= 1
+        assert r.json()[0]["original_filename"] == "a.bin"
+
     async def test_secure_delete(self, client: AsyncClient) -> None:
         token = await _token(client)
         r = await client.post(
