@@ -3,8 +3,17 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { api } from "@/lib/api";
 import type { AuditEntry } from "@/lib/types";
+
+const PAGE_SIZES = ["50", "100", "200", "500"];
 
 interface ChainResult {
   ok: boolean;
@@ -16,10 +25,14 @@ export function AuditLog() {
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [chain, setChain] = useState<ChainResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [limit, setLimit] = useState("100");
 
   useEffect(() => {
-    api.get<AuditEntry[]>("/audit-logs?limit=100").then(setEntries).catch((e) => setError(e.message));
-  }, []);
+    api
+      .get<AuditEntry[]>(`/audit-logs?limit=${limit}`)
+      .then(setEntries)
+      .catch((e) => setError(e.message));
+  }, [limit]);
 
   const verify = async () => {
     try {
@@ -39,6 +52,18 @@ export function AuditLog() {
               {chain.ok ? `Chain intact (${chain.entries_checked})` : chain.detail}
             </Badge>
           )}
+          <div className="w-32">
+            <Select value={limit} onValueChange={setLimit}>
+              <SelectTrigger aria-label="Rows per page">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZES.map((n) => (
+                  <SelectItem key={n} value={n}>{n} rows</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button variant="outline" onClick={verify}>
             <ShieldCheck className="h-4 w-4" /> Verify chain
           </Button>

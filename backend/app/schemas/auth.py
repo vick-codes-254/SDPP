@@ -41,7 +41,9 @@ class UserResponse(BaseModel):
 
     id: uuid.UUID
     username: str
-    email: EmailStr
+    # Plain str on output: the value was validated as EmailStr on input; output
+    # serialization must never fail on legitimately-stored data.
+    email: str
     full_name: str | None = None
     is_active: bool
     is_superuser: bool

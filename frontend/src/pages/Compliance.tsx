@@ -3,6 +3,13 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { api } from "@/lib/api";
 import type { ComplianceReport } from "@/lib/types";
 
@@ -46,13 +53,18 @@ export function Compliance() {
       <Card>
         <CardHeader><CardTitle>Generate report</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3">
-          <select
-            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-            value={framework}
-            onChange={(e) => setFramework(e.target.value)}
-          >
-            {FRAMEWORKS.map((f) => <option key={f.value} value={f.value}>{f.label}</option>)}
-          </select>
+          <div className="w-52">
+            <Select value={framework} onValueChange={setFramework}>
+              <SelectTrigger aria-label="Compliance framework">
+                <SelectValue placeholder="Framework" />
+              </SelectTrigger>
+              <SelectContent>
+                {FRAMEWORKS.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <Button onClick={generate} disabled={busy}>
             <FileText className="h-4 w-4" /> {busy ? "Evaluating…" : "Generate"}
           </Button>

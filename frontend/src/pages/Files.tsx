@@ -1,8 +1,23 @@
-import { Download, ShieldCheck, Trash2, Upload } from "lucide-react";
+import { Download, MoreHorizontal, ShieldCheck, Trash2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { api } from "@/lib/api";
 import type { FileItem } from "@/lib/types";
 import { formatBytes } from "@/lib/utils";
@@ -59,7 +74,10 @@ export function Files() {
   };
 
   const onDelete = async (f: FileItem, secure: boolean) => {
-    if (!confirm(secure ? "Crypto-shred this file? This is irreversible." : "Delete this file?")) return;
+    const prompt = secure
+      ? `Crypto-shred "${f.original_filename}"? The encryption key is destroyed — this is irreversible.`
+      : `Delete "${f.original_filename}"? (restorable)`;
+    if (!confirm(prompt)) return;
     try {
       await api.del(`/files/${f.id}${secure ? "?secure=true" : ""}`);
       await refresh();
@@ -78,13 +96,20 @@ export function Files() {
       <Card>
         <CardHeader><CardTitle>Upload &amp; encrypt</CardTitle></CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3">
-          <select
-            className="h-9 rounded-md border border-input bg-transparent px-3 text-sm"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-          >
-            {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-          </select>
+          <div className="w-44">
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger aria-label="File category">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c.charAt(0).toUpperCase() + c.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <input
             ref={inputRef}
             type="file"
@@ -117,16 +142,30 @@ export function Files() {
                   <td className="py-2">{formatBytes(f.size_bytes)}</td>
                   <td className="py-2"><Badge variant={statusVariant(f.status)}>{f.status}</Badge></td>
                   <td className="py-2">
-                    <div className="flex justify-end gap-1">
-                      <Button size="icon" variant="ghost" title="Download" onClick={() => onDownload(f)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" title="Verify integrity" onClick={() => onVerify(f)}>
-                        <ShieldCheck className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" title="Crypto-shred" onClick={() => onDelete(f, true)}>
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                    <div className="flex justify-end">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="icon" variant="ghost" aria-label="File actions">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onSelect={() => onDownload(f)}>
+                            <Download /> Download &amp; decrypt
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onSelect={() => onVerify(f)}>
+                            <ShieldCheck /> Verify integrity
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onSelect={() => onDelete(f, false)}>
+                            <Trash2 /> Delete (restorable)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem destructive onSelect={() => onDelete(f, true)}>
+                            <Trash2 /> Crypto-shred
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </td>
                 </tr>
