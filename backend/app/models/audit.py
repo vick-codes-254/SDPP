@@ -23,10 +23,10 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.db.types import GUID, JSONType
 from app.models.enums import (
     AlertSeverity,
     AlertStatus,
@@ -48,7 +48,7 @@ class AuditLog(Base):
     # Monotonic sequence anchors the hash chain ordering.
     seq: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), default=uuid.uuid4, unique=True, nullable=False
+        GUID, default=uuid.uuid4, unique=True, nullable=False
     )
 
     event_type: Mapped[AuditEventType] = mapped_column(
@@ -59,7 +59,7 @@ class AuditLog(Base):
     )
 
     actor_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), index=True
+        GUID, ForeignKey("users.id", ondelete="SET NULL"), index=True
     )
     actor_label: Mapped[str | None] = mapped_column(String(64))  # username snapshot
 
@@ -69,7 +69,7 @@ class AuditLog(Base):
 
     ip_address: Mapped[str | None] = mapped_column(String(64))
     user_agent: Mapped[str | None] = mapped_column(String(256))
-    detail: Mapped[dict | None] = mapped_column(JSONB)
+    detail: Mapped[dict | None] = mapped_column(JSONType)
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -101,14 +101,14 @@ class SecurityAlert(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     source_ip: Mapped[str | None] = mapped_column(String(64))
 
     related_file_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("files.id", ondelete="SET NULL")
+        GUID, ForeignKey("files.id", ondelete="SET NULL")
     )
     related_user_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
+        GUID, ForeignKey("users.id", ondelete="SET NULL")
     )
 
     acknowledged_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
+        GUID, ForeignKey("users.id", ondelete="SET NULL")
     )
     acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

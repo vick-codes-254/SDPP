@@ -6,10 +6,10 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.db.types import GUID
 from app.models.enums import KeyStatus, KeyType, RotationType
 
 
@@ -61,17 +61,17 @@ class KeyRotation(Base, UUIDPrimaryKeyMixin):
         Enum(RotationType, name="rotation_type"), nullable=False
     )
     old_key_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("encryption_keys.id", ondelete="SET NULL"), index=True
+        GUID, ForeignKey("encryption_keys.id", ondelete="SET NULL"), index=True
     )
     new_key_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("encryption_keys.id", ondelete="SET NULL")
+        GUID, ForeignKey("encryption_keys.id", ondelete="SET NULL")
     )
     old_master_key_id: Mapped[str | None] = mapped_column(String(64))
     new_master_key_id: Mapped[str | None] = mapped_column(String(64))
 
     reason: Mapped[str | None] = mapped_column(String(255))
     performed_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
+        GUID, ForeignKey("users.id", ondelete="SET NULL")
     )
     detail: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(

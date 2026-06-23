@@ -30,6 +30,11 @@ class TokenType(StrEnum):
     refresh = "refresh"  # noqa: S105
 
 
+def _default_utc_clock() -> datetime:
+    """Default injectable clock — always timezone-aware UTC."""
+    return datetime.now(UTC)
+
+
 @dataclass(frozen=True, slots=True)
 class DecodedToken:
     subject: str
@@ -48,10 +53,11 @@ class TokenManager:
     audience: str = "sdpp-clients"
     access_ttl: timedelta = timedelta(minutes=15)
     refresh_ttl: timedelta = timedelta(days=7)
-    _now: Callable[[], datetime] = datetime.now  # injectable clock
+    leeway_seconds: int = 10  # tolerate minor clock skew between services
+    clock: Callable[[], datetime] = _default_utc_clock  # injectable for tests
 
     def _utcnow(self) -> datetime:
-        now = self._now(UTC) if self._now is datetime.now else self._now()
+        now = self.clock()
         return now if now.tzinfo else now.replace(tzinfo=UTC)
 
     # ── Issuance ────────────────────────────────────────────────
@@ -103,6 +109,7 @@ class TokenManager:
                 algorithms=[self.algorithm],
                 issuer=self.issuer,
                 audience=self.audience,
+                leeway=self.leeway_seconds,
                 options={"require": ["exp", "iat", "nbf", "sub", "jti", "iss", "aud"]},
             )
         except jwt.ExpiredSignatureError as exc:

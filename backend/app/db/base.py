@@ -11,8 +11,9 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, MetaData, func
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+from app.db.types import GUID
 
 # Deterministic constraint names -> clean, reversible migrations.
 NAMING_CONVENTION = {
@@ -34,7 +35,7 @@ class UUIDPrimaryKeyMixin:
     """Adds a UUID v4 primary key (non-sequential, non-enumerable)."""
 
     id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID,
         primary_key=True,
         default=uuid.uuid4,
     )

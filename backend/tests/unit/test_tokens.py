@@ -80,7 +80,7 @@ class TestSecurity:
     def test_expired_token_rejected(self) -> None:
         past = datetime(2020, 1, 1, tzinfo=UTC)
         tm = TokenManager(
-            secret_key=SECRET, access_ttl=timedelta(minutes=1), _now=lambda: past
+            secret_key=SECRET, access_ttl=timedelta(minutes=1), clock=lambda: past
         )
         token = tm.create_access_token("u")
         # verify with a normal clock -> expired

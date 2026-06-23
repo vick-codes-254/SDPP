@@ -6,10 +6,10 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Numeric, String
-from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.db.types import GUID, JSONType
 from app.models.enums import ComplianceFramework, ReportStatus
 
 
@@ -33,9 +33,9 @@ class ComplianceReport(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     period_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Machine-readable control results + human-readable narrative.
-    summary: Mapped[dict | None] = mapped_column(JSONB)
-    content: Mapped[dict | None] = mapped_column(JSONB)
+    summary: Mapped[dict | None] = mapped_column(JSONType)
+    content: Mapped[dict | None] = mapped_column(JSONType)
 
     generated_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
+        GUID, ForeignKey("users.id", ondelete="SET NULL")
     )

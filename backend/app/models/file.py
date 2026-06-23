@@ -15,11 +15,11 @@ from sqlalchemy import (
     Text,
     func,
 )
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.security.field_encryption import EncryptedString, EncryptedText
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
+from app.db.types import GUID
 from app.models.enums import (
     FileCategory,
     FileStatus,
@@ -34,7 +34,7 @@ class File(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "files"
 
     owner_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
+        GUID, ForeignKey("users.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
     # Original filename can leak case details / PII -> encrypted at rest.
@@ -71,7 +71,7 @@ class EncryptedFile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     __tablename__ = "encrypted_files"
 
     file_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
+        GUID,
         ForeignKey("files.id", ondelete="CASCADE"),
         nullable=False,
         unique=True,  # one-to-one
@@ -84,7 +84,7 @@ class EncryptedFile(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     # The DEK that protects this file (wrapped form lives in encryption_keys).
     encryption_key_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("encryption_keys.id", ondelete="RESTRICT"), nullable=False
+        GUID, ForeignKey("encryption_keys.id", ondelete="RESTRICT"), nullable=False
     )
 
     # SHA-256 of the stored ciphertext: detects at-rest tampering WITHOUT decryption.
@@ -100,7 +100,7 @@ class IntegrityCheck(Base, UUIDPrimaryKeyMixin):
     __tablename__ = "integrity_checks"
 
     file_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("files.id", ondelete="CASCADE"), nullable=False, index=True
+        GUID, ForeignKey("files.id", ondelete="CASCADE"), nullable=False, index=True
     )
     target: Mapped[IntegrityTarget] = mapped_column(
         Enum(IntegrityTarget, name="integrity_target"), nullable=False
@@ -111,7 +111,7 @@ class IntegrityCheck(Base, UUIDPrimaryKeyMixin):
         Enum(IntegrityResult, name="integrity_result"), nullable=False, index=True
     )
     checked_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
+        GUID, ForeignKey("users.id", ondelete="SET NULL")
     )
     detail: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
