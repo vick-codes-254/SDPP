@@ -88,6 +88,11 @@ class Settings(BaseSettings):
     max_failed_logins: int = 5
     account_lockout_minutes: int = 15
 
+    # ── Startup bootstrap (optional initial admin) ──────────────
+    bootstrap_admin_username: str = ""
+    bootstrap_admin_email: str = ""
+    bootstrap_admin_password: str = ""
+
     # ── File vault ──────────────────────────────────────────────
     vault_storage_path: str = "./var/vault"
     max_upload_size_mb: int = 2048

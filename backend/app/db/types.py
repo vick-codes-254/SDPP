@@ -7,7 +7,7 @@ per dialect so the *same* models work in both places.
 
 from __future__ import annotations
 
-from sqlalchemy import JSON, Uuid
+from sqlalchemy import JSON, BigInteger, Integer, Uuid
 from sqlalchemy.dialects.postgresql import JSONB
 
 # Native UUID on PostgreSQL; CHAR(32) on SQLite. Returns python uuid.UUID either way.
@@ -15,3 +15,7 @@ GUID = Uuid
 
 # JSONB (binary, indexable) on PostgreSQL; generic JSON elsewhere.
 JSONType = JSON().with_variant(JSONB(), "postgresql")
+
+# Auto-incrementing big primary key. SQLite only auto-increments columns typed
+# exactly INTEGER (rowid), so use INTEGER there; BIGINT identity on PostgreSQL.
+BigIntPK = BigInteger().with_variant(Integer, "sqlite")

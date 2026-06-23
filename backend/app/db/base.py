@@ -8,12 +8,16 @@ constraints across databases).
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 
 from sqlalchemy import DateTime, MetaData, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.db.types import GUID
+
+
+def _utcnow() -> datetime:
+    return datetime.now(UTC)
 
 # Deterministic constraint names -> clean, reversible migrations.
 NAMING_CONVENTION = {
@@ -46,12 +50,14 @@ class TimestampMixin:
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        server_default=func.now(),
+        default=_utcnow,  # populate the Python instance on flush
+        server_default=func.now(),  # DB-side default for out-of-band inserts
         nullable=False,
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
+        default=_utcnow,
         server_default=func.now(),
-        onupdate=func.now(),
+        onupdate=_utcnow,
         nullable=False,
     )

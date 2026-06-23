@@ -82,6 +82,10 @@ def get_field_cipher() -> FieldCipher:
     return _active_cipher
 
 
+def is_field_cipher_set() -> bool:
+    return _active_cipher is not None
+
+
 # ── SQLAlchemy column types ─────────────────────────────────────
 class _EncryptedType(TypeDecorator):
     """Base for encrypted column types. Stores base64(nonce‖ct‖tag) as text."""

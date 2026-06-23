@@ -14,7 +14,6 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
-    BigInteger,
     DateTime,
     Enum,
     ForeignKey,
@@ -26,7 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
-from app.db.types import GUID, JSONType
+from app.db.types import BigIntPK, GUID, JSONType
 from app.models.enums import (
     AlertSeverity,
     AlertStatus,
@@ -46,7 +45,7 @@ class AuditLog(Base):
     )
 
     # Monotonic sequence anchors the hash chain ordering.
-    seq: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
+    seq: Mapped[int] = mapped_column(BigIntPK, primary_key=True, autoincrement=True)
     id: Mapped[uuid.UUID] = mapped_column(
         GUID, default=uuid.uuid4, unique=True, nullable=False
     )

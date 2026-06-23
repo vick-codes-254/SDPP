@@ -84,6 +84,7 @@ class PasswordManager:
     salt_len: int = 16
     policy: PasswordPolicy = field(default_factory=PasswordPolicy)
     _hasher: PasswordHasher = field(init=False, repr=False)
+    _dummy_hash: str | None = field(init=False, default=None, repr=False)
 
     def __post_init__(self) -> None:
         self._hasher = PasswordHasher(
@@ -94,6 +95,17 @@ class PasswordManager:
             salt_len=self.salt_len,
             type=Type.ID,  # Argon2id
         )
+
+    def dummy_verify(self, password: str) -> None:
+        """Run a verify against a self-calibrated dummy hash.
+
+        Used on the "user not found" path so login timing is indistinguishable
+        from a real verification (mitigates username enumeration). The dummy hash
+        uses *this manager's* cost parameters, so timing matches production.
+        """
+        if self._dummy_hash is None:
+            self._dummy_hash = self.hash("\x00sdpp-timing-equalizer\x00")
+        self.verify(self._dummy_hash, password)
 
     # ── Hashing / verification ──────────────────────────────────
     def hash(self, password: str) -> str:
