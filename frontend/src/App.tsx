@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { Assets } from "@/pages/Assets";
 import { AuditLog } from "@/pages/AuditLog";
 import { AnalyticsBI } from "@/pages/Analytics";
+import { ExecutiveBI } from "@/pages/ExecutiveBI";
 import { LiveWall } from "@/pages/LiveWall";
 import {
   Analytics,
@@ -63,7 +64,8 @@ export default function App() {
             }
           >
             <Route path="/" element={<MissionControl />} />
-            <Route path="/overview" element={<ExecutiveDashboard />} />
+            <Route path="/overview" element={<ExecutiveBI />} />
+            <Route path="/overview/legacy" element={<ExecutiveDashboard />} />
             {/* Security operations */}
             <Route path="/live" element={<LiveWall />} />
             <Route path="/live/legacy" element={<LiveMonitoring />} />

@@ -232,6 +232,127 @@ export function StackedBars({ labels, series, height = 220 }: {
   );
 }
 
+/** Power BI funnel — centred narrowing bars for a pipeline/lifecycle. */
+export function Funnel({ stages }: {
+  stages: { label: string; value: number; color?: string }[];
+}) {
+  const max = Math.max(...stages.map((s) => s.value), 1);
+  if (!stages.length) return <p className="text-sm text-muted-foreground">No data.</p>;
+  return (
+    <div className="space-y-1.5">
+      {stages.map((s, i) => {
+        const pct = Math.max(6, (s.value / max) * 100);
+        const conv = i === 0 ? 100 : Math.round((s.value / (stages[0].value || 1)) * 100);
+        return (
+          <div key={i} className="flex items-center gap-3">
+            <span className="w-32 shrink-0 truncate text-right text-xs text-muted-foreground">{s.label}</span>
+            <div className="flex flex-1 justify-center">
+              <div className="flex h-7 items-center justify-center rounded text-xs font-semibold text-white"
+                style={{ width: `${pct}%`, background: s.color ?? "var(--iris)" }}>
+                {s.value}
+              </div>
+            </div>
+            <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted-foreground">{conv}%</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Squarified treemap (Bruls/Huizing). Returns %-positioned tiles. */
+function squarify(data: { label: string; value: number; color: string }[], W = 100, H = 100) {
+  const nodes = data.filter((d) => d.value > 0).map((d) => ({ ...d, _a: 0 }));
+  const total = nodes.reduce((s, n) => s + n.value, 0) || 1;
+  nodes.forEach((n) => { n._a = (n.value / total) * (W * H); });
+  const out: { label: string; value: number; color: string; x: number; y: number; w: number; h: number }[] = [];
+  let row: typeof nodes = [];
+  const rect = { x: 0, y: 0, w: W, h: H };
+  const worst = (r: typeof nodes, side: number) => {
+    const s = r.reduce((a, b) => a + b._a, 0);
+    const mx = Math.max(...r.map((n) => n._a)), mn = Math.min(...r.map((n) => n._a));
+    return Math.max((side * side * mx) / (s * s), (s * s) / (side * side * mn));
+  };
+  const flush = () => {
+    const s = row.reduce((a, b) => a + b._a, 0);
+    if (rect.w >= rect.h) {
+      const rw = s / rect.h; let oy = rect.y;
+      for (const n of row) { const nh = n._a / rw; out.push({ ...n, x: rect.x, y: oy, w: rw, h: nh }); oy += nh; }
+      rect.x += rw; rect.w -= rw;
+    } else {
+      const rh = s / rect.w; let ox = rect.x;
+      for (const n of row) { const nw = n._a / rh; out.push({ ...n, x: ox, y: rect.y, w: nw, h: rh }); ox += nw; }
+      rect.y += rh; rect.h -= rh;
+    }
+    row = [];
+  };
+  const q = [...nodes];
+  while (q.length) {
+    const side = Math.min(rect.w, rect.h);
+    if (row.length === 0) { row.push(q.shift()!); continue; }
+    if (worst(row, side) >= worst([...row, q[0]], side)) row.push(q.shift()!);
+    else flush();
+  }
+  if (row.length) flush();
+  return out;
+}
+
+export function Treemap({ items, height = 200 }: {
+  items: { label: string; value: number; color: string }[]; height?: number;
+}) {
+  const tiles = squarify(items);
+  if (!tiles.length) return <Empty height={height} />;
+  return (
+    <div className="relative w-full overflow-hidden rounded" style={{ height }}>
+      {tiles.map((t, i) => (
+        <div key={i} className="absolute overflow-hidden border border-background/60 p-1.5"
+          style={{ left: `${t.x}%`, top: `${t.y}%`, width: `${t.w}%`, height: `${t.h}%`, background: t.color }}
+          title={`${t.label}: ${t.value}`}>
+          {t.w > 14 && t.h > 12 && (
+            <div className="leading-tight text-white">
+              <div className="truncate text-[10px] font-medium capitalize opacity-90">{t.label.replace(/_/g, " ")}</div>
+              <div className="text-xs font-semibold tabular-nums">{t.value}</div>
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Bubble/scatter plot (Power BI "size vs revenue"). */
+export function Scatter({ points, height = 200, xLabel, yLabel }: {
+  points: { x: number; y: number; r?: number; color?: string; label?: string }[];
+  height?: number; xLabel?: string; yLabel?: string;
+}) {
+  const w = 320;
+  if (!points.length) return <Empty height={height} />;
+  const maxX = Math.max(...points.map((p) => p.x), 1);
+  const maxY = Math.max(...points.map((p) => p.y), 1);
+  const pad = 6;
+  const px = (x: number) => pad + (x / maxX) * (w - pad * 2);
+  const py = (y: number) => height - pad - (y / maxY) * (height - pad * 2);
+  return (
+    <div>
+      <svg viewBox={`0 0 ${w} ${height}`} className="w-full" style={{ height }}>
+        <line x1={pad} y1={height - pad} x2={w - pad} y2={height - pad} stroke="hsl(var(--border))" />
+        <line x1={pad} y1={pad} x2={pad} y2={height - pad} stroke="hsl(var(--border))" />
+        {points.map((p, i) => (
+          <circle key={i} cx={px(p.x)} cy={py(p.y)} r={p.r ?? 5}
+            fill={p.color ?? "var(--iris)"} fillOpacity={0.55} stroke={p.color ?? "var(--iris)"}>
+            <title>{`${p.label ? p.label + ": " : ""}${p.x} / ${p.y}`}</title>
+          </circle>
+        ))}
+      </svg>
+      {(xLabel || yLabel) && (
+        <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
+          <span>{yLabel}</span><span>{xLabel}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Legend({ series }: { series: { label: string; color: string }[] }) {
   return (
     <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
