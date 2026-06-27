@@ -45,6 +45,7 @@ class UserResponse(BaseModel):
     # serialization must never fail on legitimately-stored data.
     email: str
     full_name: str | None = None
+    organization_id: uuid.UUID | None = None
     is_active: bool
     is_superuser: bool
     mfa_enabled: bool

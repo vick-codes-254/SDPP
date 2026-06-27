@@ -29,7 +29,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings: Settings = app.state.settings
     logger.info("startup", env=str(settings.app_env), version=__version__)
     try:
-        from app.db.session import get_sessionmaker
+        from app.db.session import get_engine, get_sessionmaker
+
+        # In non-production, self-provision any missing tables so the running app
+        # always matches the ORM models. Production schema is owned by Alembic.
+        if not settings.is_production:
+            from app.models import Base
+
+            async with get_engine().begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            logger.info("schema_synced", tables=len(Base.metadata.tables))
 
         async with get_sessionmaker()() as session:
             await run_startup_bootstrap(session, settings)

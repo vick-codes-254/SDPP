@@ -84,6 +84,13 @@ class DashboardResponse(BaseModel):
     open_alerts: int
     critical_alerts: int
     encryption_health_score: float
+    total_assets: int
+    assets_by_criticality: dict[str, int]
+    open_vulnerabilities: int
+    vulns_by_severity: dict[str, int]
+    open_incidents: int
+    discovery_scans: int
+    vuln_scans: int
     recent_events: list[dict[str, Any]]
 
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import DateTime, MetaData, func
+from sqlalchemy import DateTime, ForeignKey, MetaData, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 from app.db.types import GUID
@@ -60,4 +60,19 @@ class TimestampMixin:
         server_default=func.now(),
         onupdate=_utcnow,
         nullable=False,
+    )
+
+
+class TenantMixin:
+    """Adds the multi-tenant scoping FK.
+
+    Every tenant-owned record carries the owning ``organization_id`` so all
+    queries can be isolated per tenant. The column is copied onto each mapped
+    subclass (SQLAlchemy mixin column semantics)."""
+
+    organization_id: Mapped[uuid.UUID] = mapped_column(
+        GUID,
+        ForeignKey("organizations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )

@@ -30,11 +30,12 @@ def test_super_admin_has_all_permissions() -> None:
 
 def test_least_privilege_viewer() -> None:
     viewer = next(r for r in DEFAULT_ROLES if r.name == "viewer")
-    assert viewer.permissions == {"dashboard:read", "file:read"}
+    assert viewer.permissions == {"dashboard:read", "file:read", "asset:read"}
     # viewer must NOT be able to decrypt/delete/manage
     assert "file:download" not in viewer.permissions
     assert "key:rotate" not in viewer.permissions
     assert "user:manage" not in viewer.permissions
+    assert "asset:manage" not in viewer.permissions
 
 
 def test_auditor_is_read_only() -> None:

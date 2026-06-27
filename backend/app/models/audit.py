@@ -105,6 +105,10 @@ class SecurityAlert(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     related_user_id: Mapped[uuid.UUID | None] = mapped_column(
         GUID, ForeignKey("users.id", ondelete="SET NULL")
     )
+    # Loose reference to an SMP asset (no FK to avoid cross-migration ordering).
+    related_asset_id: Mapped[uuid.UUID | None] = mapped_column(GUID)
+    # Stable key for de-duplicating alerts from the same source (e.g. "finding:<id>").
+    source_ref: Mapped[str | None] = mapped_column(String(128), index=True)
 
     acknowledged_by: Mapped[uuid.UUID | None] = mapped_column(
         GUID, ForeignKey("users.id", ondelete="SET NULL")

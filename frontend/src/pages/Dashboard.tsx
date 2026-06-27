@@ -1,10 +1,13 @@
 import {
   AlertTriangle,
+  Bug,
   Database,
   FileLock2,
   HeartPulse,
   KeyRound,
+  Server,
   ShieldAlert,
+  Siren,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -50,15 +53,37 @@ export function Dashboard() {
         <Badge variant={healthVariant}>Encryption health {health}%</Badge>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <Stat icon={FileLock2} label="Encrypted files" value={data.encrypted_files} accent="text-primary" />
-        <Stat icon={Database} label="Storage used" value={formatBytes(data.storage_usage_bytes)} />
-        <Stat icon={KeyRound} label="Key rotations" value={data.key_rotations} />
-        <Stat icon={HeartPulse} label="Health score" value={`${health}%`} accent="text-emerald-400" />
-        <Stat icon={ShieldAlert} label="Integrity violations" value={data.integrity_violations} accent="text-amber-400" />
-        <Stat icon={AlertTriangle} label="Failed decryptions" value={data.failed_decryptions} accent="text-amber-400" />
-        <Stat icon={AlertTriangle} label="Open alerts" value={data.open_alerts} accent="text-amber-400" />
-        <Stat icon={ShieldAlert} label="Critical alerts" value={data.critical_alerts} accent="text-destructive" />
+      <div>
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Security posture
+        </h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Stat icon={Server} label="Assets" value={data.total_assets} accent="text-primary" />
+          <Stat icon={Bug} label="Open vulnerabilities" value={data.open_vulnerabilities} accent="text-amber-400" />
+          <Stat
+            icon={ShieldAlert}
+            label="Critical vulnerabilities"
+            value={data.vulns_by_severity?.critical ?? 0}
+            accent="text-destructive"
+          />
+          <Stat icon={Siren} label="Open incidents" value={data.open_incidents} accent="text-amber-400" />
+        </div>
+      </div>
+
+      <div>
+        <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Encryption &amp; security layer
+        </h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <Stat icon={FileLock2} label="Encrypted files" value={data.encrypted_files} accent="text-primary" />
+          <Stat icon={Database} label="Storage used" value={formatBytes(data.storage_usage_bytes)} />
+          <Stat icon={KeyRound} label="Key rotations" value={data.key_rotations} />
+          <Stat icon={HeartPulse} label="Health score" value={`${health}%`} accent="text-emerald-400" />
+          <Stat icon={ShieldAlert} label="Integrity violations" value={data.integrity_violations} accent="text-amber-400" />
+          <Stat icon={AlertTriangle} label="Failed decryptions" value={data.failed_decryptions} accent="text-amber-400" />
+          <Stat icon={AlertTriangle} label="Open alerts" value={data.open_alerts} accent="text-amber-400" />
+          <Stat icon={ShieldAlert} label="Critical alerts" value={data.critical_alerts} accent="text-destructive" />
+        </div>
       </div>
 
       <Card>

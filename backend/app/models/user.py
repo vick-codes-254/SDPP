@@ -52,6 +52,11 @@ class User(Base, UUIDPrimaryKeyMixin, TimestampMixin):
 
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
 
+    # Tenant the user belongs to (nullable for platform/global super-admins).
+    organization_id: Mapped[uuid.UUID | None] = mapped_column(
+        GUID, ForeignKey("organizations.id", ondelete="SET NULL"), index=True
+    )
+
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 

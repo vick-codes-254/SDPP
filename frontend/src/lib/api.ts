@@ -104,6 +104,24 @@ export const api = {
       }),
     );
   },
+  async patch<T>(path: string, body?: unknown): Promise<T> {
+    return unwrap<T>(
+      await request(path, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      }),
+    );
+  },
+  async put<T>(path: string, body?: unknown): Promise<T> {
+    return unwrap<T>(
+      await request(path, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      }),
+    );
+  },
   async del<T>(path: string): Promise<T> {
     return unwrap<T>(await request(path, { method: "DELETE" }));
   },

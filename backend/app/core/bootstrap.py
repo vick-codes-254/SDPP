@@ -79,8 +79,59 @@ async def seed_admin(db: AsyncSession, settings: Settings) -> None:
     logger.info("admin_seeded", username=settings.bootstrap_admin_username)
 
 
+async def seed_alert_rules(db: AsyncSession) -> None:
+    from app.services.alert_engine import AlertEngine
+
+    created = await AlertEngine(db).seed_default_rules()
+    if created:
+        logger.info("alert_rules_seeded", count=created)
+
+
+async def seed_demo_org(db: AsyncSession) -> None:
+    """Create a default tenant and attach the bootstrap admin to it (idempotent)."""
+    from app.models.organization import Organization
+    from app.models.site import Site
+
+    org = (
+        await db.execute(select(Organization).where(Organization.slug == "demo"))
+    ).scalar_one_or_none()
+    if org is None:
+        from app.core.enums import OrgStatus, SubscriptionPlan
+
+        org = Organization(
+            name="Demo Security Co.",
+            slug="demo",
+            status=OrgStatus.active,
+            plan=SubscriptionPlan.enterprise,
+            country="KE",
+            timezone="Africa/Nairobi",
+        )
+        db.add(org)
+        await db.flush()
+        db.add(
+            Site(
+                organization_id=org.id,
+                name="HQ Campus",
+                code="HQ",
+                city="Nairobi",
+                country="KE",
+                timezone="Africa/Nairobi",
+            )
+        )
+        logger.info("demo_org_seeded", org_id=str(org.id))
+
+    # Attach any org-less users (e.g. the bootstrap admin) to the demo tenant.
+    orphan_admins = (
+        await db.execute(select(User).where(User.organization_id.is_(None)))
+    ).scalars().all()
+    for user in orphan_admins:
+        user.organization_id = org.id
+
+
 async def run_startup_bootstrap(db: AsyncSession, settings: Settings) -> None:
     await bootstrap_field_cipher(db)
     await seed_rbac(db)
     await seed_admin(db, settings)
+    await seed_alert_rules(db)
+    await seed_demo_org(db)
     await db.commit()

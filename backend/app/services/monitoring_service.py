@@ -10,16 +10,22 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.asset import Asset
 from app.models.audit import AuditLog, SecurityAlert
 from app.models.enums import (
     AlertSeverity,
     AlertStatus,
     AuditEventType,
     FileStatus,
+    IncidentStatus,
     IntegrityResult,
+    VulnStatus,
 )
 from app.models.file import EncryptedFile, File, IntegrityCheck
+from app.models.incident import Incident
 from app.models.key import KeyRotation
+from app.models.scan import DiscoveryScan
+from app.models.vuln import Finding, VulnScan
 
 
 @dataclass(frozen=True, slots=True)
@@ -34,6 +40,14 @@ class DashboardMetrics:
     open_alerts: int
     critical_alerts: int
     encryption_health_score: float
+    # ── SOC-wide metrics ────────────────────────────────────────
+    total_assets: int
+    assets_by_criticality: dict[str, int]
+    open_vulnerabilities: int
+    vulns_by_severity: dict[str, int]
+    open_incidents: int
+    discovery_scans: int
+    vuln_scans: int
     recent_events: list[dict[str, Any]]
 
     def to_dict(self) -> dict[str, Any]:
@@ -88,6 +102,25 @@ class MonitoringService:
             integrity_violations=integrity_violations,
         )
 
+        # ── SOC-wide metrics ────────────────────────────────────
+        total_assets = await self._count(select(func.count()).select_from(Asset))
+        assets_by_criticality = await self._group_counts(Asset.criticality)
+        open_vulnerabilities = await self._count(
+            select(func.count()).select_from(Finding).where(Finding.status == VulnStatus.open)
+        )
+        vulns_by_severity = await self._group_counts(
+            Finding.severity, where=Finding.status == VulnStatus.open
+        )
+        open_incidents = await self._count(
+            select(func.count()).select_from(Incident).where(
+                Incident.status.in_(
+                    [IncidentStatus.open, IncidentStatus.investigating, IncidentStatus.contained]
+                )
+            )
+        )
+        discovery_scans = await self._count(select(func.count()).select_from(DiscoveryScan))
+        vuln_scans = await self._count(select(func.count()).select_from(VulnScan))
+
         recent_rows = (
             await self.db.execute(
                 select(AuditLog).order_by(AuditLog.seq.desc()).limit(10)
@@ -117,8 +150,22 @@ class MonitoringService:
             open_alerts=open_alerts,
             critical_alerts=critical_alerts,
             encryption_health_score=health,
+            total_assets=total_assets,
+            assets_by_criticality=assets_by_criticality,
+            open_vulnerabilities=open_vulnerabilities,
+            vulns_by_severity=vulns_by_severity,
+            open_incidents=open_incidents,
+            discovery_scans=discovery_scans,
+            vuln_scans=vuln_scans,
             recent_events=recent_events,
         )
+
+    async def _group_counts(self, column, *, where=None) -> dict[str, int]:  # noqa: ANN001
+        stmt = select(column, func.count()).group_by(column)
+        if where is not None:
+            stmt = stmt.where(where)
+        rows = (await self.db.execute(stmt)).all()
+        return {getattr(k, "value", str(k)): int(v) for k, v in rows}
 
     @staticmethod
     def _health_score(

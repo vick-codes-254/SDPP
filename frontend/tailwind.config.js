@@ -6,6 +6,10 @@ export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["Inter", "system-ui", "sans-serif"],
+        mono: ["JetBrains Mono", "ui-monospace", "monospace"],
+      },
       keyframes: {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
         "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
@@ -23,11 +27,29 @@ export default {
         accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
         card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
         popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))" },
+        iris: "var(--iris)",
+        signal: "var(--signal)",
+        sev: {
+          critical: "var(--sev-critical)",
+          high: "var(--sev-high)",
+          medium: "var(--sev-medium)",
+          low: "var(--sev-low)",
+          info: "var(--sev-info)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        e1: "0 1px 2px rgba(0,0,0,.3)",
+        e2: "0 8px 24px rgba(0,0,0,.45)",
+        e3: "0 16px 48px rgba(0,0,0,.55)",
+      },
+      transitionTimingFunction: {
+        std: "cubic-bezier(.2,.8,.2,1)",
+        emph: "cubic-bezier(.16,1,.3,1)",
       },
     },
   },
